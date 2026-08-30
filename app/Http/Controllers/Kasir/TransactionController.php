@@ -17,7 +17,6 @@ class TransactionController extends Controller
     {
         $transactions = Transaction::with('user')->latest()->get();
 
-        // Path disesuaikan dengan folder di VS Code (Case-Sensitive)
         return Inertia::render('Kasir/Transaction/TransactionIndex', [
             'transactions' => $transactions
         ]);
@@ -27,7 +26,6 @@ class TransactionController extends Controller
     {
         $products = Product::with('category')->where('stock', '>', 0)->get();
 
-        // Path disesuaikan dengan folder di VS Code (Case-Sensitive)
         return Inertia::render('Kasir/Transaction/TransactionCreate', [
             'products' => $products
         ]);
@@ -36,16 +34,16 @@ class TransactionController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'items'              => 'required|array|min:1',
+            'items'             => 'required|array|min:1',
             'items.*.product_id' => 'required|exists:products,id',
             'items.*.quantity'   => 'required|integer|min:1',
-            'subtotal'           => 'required|numeric',
-            'discount'           => 'nullable|numeric',
-            'total'              => 'required|numeric',
-            'paid_amount'        => 'required|numeric',
-            'change_amount'      => 'required|numeric',
-            'payment_method'     => 'required|string',
-            'notes'              => 'nullable|string',
+            'subtotal'          => 'required|numeric',
+            'discount'          => 'nullable|numeric',
+            'total'             => 'required|numeric',
+            'paid_amount'       => 'required|numeric',
+            'change_amount'     => 'required|numeric',
+            'payment_method'    => 'required|string',
+            'notes'             => 'nullable|string',
         ]);
 
         try {
@@ -104,7 +102,6 @@ class TransactionController extends Controller
     {
         $transaction->load('user', 'items.product');
 
-        // Path disesuaikan dengan folder di VS Code (Case-Sensitive)
         return Inertia::render('Kasir/Transaction/TransactionShow', [
             'transaction' => $transaction
         ]);

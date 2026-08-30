@@ -38,6 +38,10 @@ Route::middleware(['auth'])->group(function () {
     // Rute memproses pembayaran saat tombol diklik
     Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
 });
+Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('/kasir/reports', [ReportController::class, 'index'])->name('kasir.reports');
+});
 
 });
 

@@ -6,7 +6,7 @@ import { type NavItem } from '@/types';
 import { Link } from '@inertiajs/react';
 import { BookOpen, Folder, LayoutGrid, ReceiptText, ShoppingBasket, Tag } from 'lucide-react';
 import AppLogo from './app-logo';
-
+import { FileText} from 'lucide-react';
 
 
 const mainNavItems: NavItem[] = [
@@ -33,6 +33,12 @@ const kasirNavItems: NavItem[] = [
         url: '/kasir/transactions',
         icon: ReceiptText,
     },
+    {
+    title: 'Laporan Keuangan',
+    url: '/kasir/reports',
+    icon: FileText,
+},
+    
 ];
 
 const footerNavItems: NavItem[] = [
