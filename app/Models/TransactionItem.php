@@ -15,9 +15,9 @@ class TransactionItem extends Model
         'subtotal'];    
 
     protected $casts = [
-        'subtotal' => 'decimal:15,2',
+        'subtotal' => 'decimal:2',
         'quantity' => 'integer',
-        'price' => 'decimal:15,2',
+        'price' => 'decimal:2',
     ];
 
     public function transaction()

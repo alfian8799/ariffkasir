@@ -19,6 +19,12 @@ interface TransactionItemData {
 }
 
 export default function TransactionIndex({ transactions }: { transactions: TransactionItemData[] }) {
+    const getStatusLabel = (status?: string) => {
+        if (status === 'completed') return 'Selesai';
+        if (status === 'cancelled') return 'Dibatalkan';
+        return status || 'Selesai';
+    };
+
     const handleCancel = (id: number) => {
         if (confirm('Apakah Anda yakin ingin membatalkan transaksi ini?')) {
             router.delete(`/kasir/transactions/${id}`);
@@ -58,8 +64,8 @@ export default function TransactionIndex({ transactions }: { transactions: Trans
                                         <td className="p-3">Rp {Number(trx.total).toLocaleString('id-ID')}</td>
                                         <td className="p-3">{trx.payment_method}</td>
                                         <td className="p-3">
-                                            <span className={`px-2 py-1 rounded text-xs font-semibold ${trx.status === 'Selesai' ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
-                                                {trx.status}
+                                            <span className={`px-2 py-1 rounded text-xs font-semibold ${trx.status === 'completed' ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
+                                                {getStatusLabel(trx.status)}
                                             </span>
                                         </td>
                                         <td className="p-3">{new Date(trx.created_at).toLocaleDateString('id-ID')}</td>

@@ -4,6 +4,7 @@ import { Head, useForm } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
+import InputError from '@/components/input-error';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -25,33 +26,31 @@ interface CartItem {
     name: string;
     price: number;
     quantity: number;
-    // Menggunakan union type untuk menghilangkan error ESLint (no-explicit-any) dan memenuhi syarat Inertia
     [key: string]: string | number; 
+    
 }
 
 interface TransactionForm {
     items: CartItem[];
     subtotal: number;
-    discount: number;
+    discount: string | number; 
     total: number;
-    paid_amount: number;
-    change_amount: number;
+    paid_amount: string | number; 
+    change_amount: number; // KEMBALI KE change_amount
     payment_method: string;
     notes: string;
-    // Menggunakan union type yang mencakup semua tipe properti di atas
-    [key: string]: string | number | CartItem[]; 
+    [key: string]: string | number | CartItem[] | undefined;
 }
 
 export default function TransactionCreate({ products }: { products: Product[] }) {
     const [search, setSearch] = useState('');
 
-    // Inisialisasi form menggunakan interface TransactionForm
-    const { data, setData, post, processing } = useForm<TransactionForm>({
+    const { data, setData, post, processing, errors, transform } = useForm<TransactionForm>({
         items: [],
         subtotal: 0,
-        discount: 0,
+        discount: '', 
         total: 0,
-        paid_amount: 0,
+        paid_amount: '', 
         change_amount: 0,
         payment_method: 'Cash',
         notes: '',
@@ -61,18 +60,12 @@ export default function TransactionCreate({ products }: { products: Product[] })
         p.name.toLowerCase().includes(search.toLowerCase())
     );
 
-    const calculateTotals = (items: CartItem[], discount: number, paid: number) => {
-        const subtotal = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-        const total = Math.max(0, subtotal - discount);
-        const change = Math.max(0, paid - total);
+    const calculateTotals = (currentItems: CartItem[], currentDiscount: number, currentPaid: number) => {
+        const subtotal = currentItems.reduce((sum, i) => sum + i.price * i.quantity, 0);
+        const total = Math.max(0, subtotal - currentDiscount);
+        const changeValue = Math.max(0, currentPaid - total);
 
-        setData((prev) => ({
-            ...prev,
-            items,
-            subtotal,
-            total,
-            change_amount: change,
-        }));
+        setData(prev => ({ ...prev, items: currentItems, subtotal, total, change_amount: changeValue }));
     };
 
     const addToCart = (product: Product) => {
@@ -85,7 +78,7 @@ export default function TransactionCreate({ products }: { products: Product[] })
         } else {
             updatedItems = [...data.items, { product_id: product.id, name: product.name, price: Number(product.price), quantity: 1 }];
         }
-        calculateTotals(updatedItems, data.discount, data.paid_amount);
+        calculateTotals(updatedItems, Number(data.discount) || 0, Number(data.paid_amount) || 0);
     };
 
     const updateQuantity = (product_id: number, qty: number) => {
@@ -96,35 +89,45 @@ export default function TransactionCreate({ products }: { products: Product[] })
         const updatedItems = data.items.map((i) =>
             i.product_id === product_id ? { ...i, quantity: qty } : i
         );
-        calculateTotals(updatedItems, data.discount, data.paid_amount);
+        calculateTotals(updatedItems, Number(data.discount) || 0, Number(data.paid_amount) || 0);
     };
 
     const removeFromCart = (product_id: number) => {
         const updatedItems = data.items.filter((i) => i.product_id !== product_id);
-        calculateTotals(updatedItems, data.discount, data.paid_amount);
+        calculateTotals(updatedItems, Number(data.discount) || 0, Number(data.paid_amount) || 0);
     };
 
-    const handleDiscountChange = (val: number) => {
-        const discount = isNaN(val) ? 0 : val;
-        calculateTotals(data.items, discount, data.paid_amount);
+    const handleDiscountChange = (val: string) => {
+        setData('discount', val);
+        const numDiscount = Number(val) || 0;
+        calculateTotals(data.items, numDiscount, Number(data.paid_amount) || 0);
     };
 
-    const handlePaidChange = (val: number) => {
-        const paid = isNaN(val) ? 0 : val;
-        const change = Math.max(0, paid - data.total);
-        setData((prev) => ({ ...prev, paid_amount: paid, change_amount: change }));
+    const handlePaidChange = (val: string) => {
+        setData('paid_amount', val);
+        const numPaid = Number(val) || 0;
+        calculateTotals(data.items, Number(data.discount) || 0, numPaid);
     };
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
+        
         if (data.items.length === 0) {
             alert('Keranjang masih kosong!');
             return;
         }
-        if (data.paid_amount < data.total) {
+        if ((Number(data.paid_amount) || 0) < data.total) {
             alert('Uang bayar kurang dari total belanja!');
             return;
         }
+
+        transform((payload) => ({
+            ...payload,
+            discount: Number(payload.discount) || 0,
+            paid_amount: Number(payload.paid_amount) || 0,
+            payment_method: String(payload.payment_method).toLowerCase(),
+        }));
+
         post('/kasir/transactions');
     };
 
@@ -135,7 +138,6 @@ export default function TransactionCreate({ products }: { products: Product[] })
                 <h1 className="text-xl font-semibold text-gray-800">Transaksi Baru</h1>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    {/* Daftar Produk */}
                     <div className="md:col-span-2 space-y-4">
                         <Input
                             type="text"
@@ -160,10 +162,10 @@ export default function TransactionCreate({ products }: { products: Product[] })
                         </div>
                     </div>
 
-                    {/* Keranjang & Checkout */}
                     <div className="bg-white p-4 rounded-xl border shadow-sm flex flex-col justify-between">
                         <div>
                             <h3 className="font-semibold text-gray-800 mb-3 border-b pb-2">Keranjang</h3>
+                            <InputError message={errors.items} className="mb-2" />
                             <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
                                 {data.items.length === 0 ? (
                                     <p className="text-gray-400 text-sm text-center py-6">Belum ada item.</p>
@@ -190,34 +192,61 @@ export default function TransactionCreate({ products }: { products: Product[] })
                                 <span>Subtotal</span>
                                 <span>Rp {data.subtotal.toLocaleString('id-ID')}</span>
                             </div>
+                            
                             <div className="flex justify-between items-center text-sm">
                                 <span>Diskon (Rp)</span>
-                                <Input type="number" className="w-28 h-8 text-right" value={data.discount} onChange={(e) => handleDiscountChange(Number(e.target.value))} />
+                                <div>
+                                    <Input 
+                                        type="number" 
+                                        className="w-28 h-8 text-right" 
+                                        placeholder="0"
+                                        value={data.discount} 
+                                        onChange={(e) => handleDiscountChange(e.target.value)} 
+                                    />
+                                    <InputError message={errors.discount} className="mt-1 text-right" />
+                                </div>
                             </div>
+
                             <div className="flex justify-between font-bold text-base border-t pt-2">
                                 <span>Total</span>
                                 <span className="text-blue-600">Rp {data.total.toLocaleString('id-ID')}</span>
                             </div>
+
                             <div className="flex justify-between items-center text-sm">
                                 <span>Uang Bayar (Rp)</span>
-                                <Input type="number" className="w-28 h-8 text-right" value={data.paid_amount} onChange={(e) => handlePaidChange(Number(e.target.value))} />
+                                <div>
+                                    <Input 
+                                        type="number" 
+                                        className="w-28 h-8 text-right" 
+                                        placeholder="0"
+                                        value={data.paid_amount} 
+                                        onChange={(e) => handlePaidChange(e.target.value)} 
+                                    />
+                                </div>
                             </div>
+                            <InputError message={errors.paid_amount} className="text-right" />
+                            
                             <div className="flex justify-between text-sm text-gray-600">
                                 <span>Kembalian</span>
-                                <span>Rp {data.change_amount.toLocaleString('id-ID')}</span>
+                                <span>Rp {data.change_amount.toLocaleString('id-ID')}</span> 
                             </div>
+                            
                             <div>
                                 <label className="text-xs text-gray-500">Metode Pembayaran</label>
                                 <select className="w-full border rounded-md text-sm p-1.5 mt-1" value={data.payment_method} onChange={(e) => setData('payment_method', e.target.value)}>
-                                    <option value="Cash">Cash</option>
-                                    <option value="QRIS">QRIS</option>
-                                    <option value="Transfer">Transfer</option>
+                                    <option value="cash">Cash</option>
+                                    <option value="qris">QRIS</option>
+                                    <option value="transfer">Transfer</option>
                                 </select>
+                                <InputError message={errors.payment_method} className="mt-1" />
                             </div>
+                            
                             <div>
                                 <label className="text-xs text-gray-500">Catatan</label>
                                 <Input type="text" placeholder="Opsional" value={data.notes} onChange={(e) => setData('notes', e.target.value)} />
+                                <InputError message={errors.notes} className="mt-1" />
                             </div>
+                            
                             <Button type="submit" className="w-full mt-2" disabled={processing || data.items.length === 0}>
                                 Bayar Sekarang
                             </Button>

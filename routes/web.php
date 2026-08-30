@@ -8,6 +8,7 @@ use App\Http\Controllers\Kasir\TransactionController;
 use Inertia\Inertia;
 
 
+
 Route::get('/', function () {
     return Inertia::render('welcome');
 })->name('home');
@@ -24,6 +25,20 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::resource('transactions', TransactionController::class);
         
     });
+
+   
+
+Route::middleware(['auth'])->group(function () {
+    // Halaman daftar transaksi (tujuan setelah berhasil bayar)
+    Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+    
+    // Halaman kasir
+    Route::get('/transactions/create', [TransactionController::class, 'create'])->name('transactions.create');
+    
+    // Rute memproses pembayaran saat tombol diklik
+    Route::post('/transactions', [TransactionController::class, 'store'])->name('transactions.store');
+});
+
 });
 
 require __DIR__ . '/settings.php';

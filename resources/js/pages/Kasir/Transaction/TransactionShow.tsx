@@ -33,6 +33,8 @@ interface TransactionData {
 }
 
 export default function TransactionShow({ transaction }: { transaction: TransactionData }) {
+    const statusLabel = transaction.status === 'completed' ? 'Selesai' : transaction.status === 'cancelled' ? 'Dibatalkan' : transaction.status;
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Detail ${transaction.invoice_number}`} />
@@ -51,7 +53,7 @@ export default function TransactionShow({ transaction }: { transaction: Transact
                             <p><strong>Tanggal:</strong> {new Date(transaction.created_at).toLocaleString('id-ID')}</p>
                         </div>
                         <div className="text-right">
-                            <p><strong>Status:</strong> <span className={transaction.status === 'Selesai' ? 'text-green-600' : 'text-red-600'}>{transaction.status}</span></p>
+                            <p><strong>Status:</strong> <span className={transaction.status === 'completed' ? 'text-green-600' : 'text-red-600'}>{statusLabel}</span></p>
                             <p><strong>Metode:</strong> {transaction.payment_method}</p>
                         </div>
                     </div>

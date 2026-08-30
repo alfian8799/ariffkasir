@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             if (!Schema::hasColumn('users', 'role_id')) {
-                $table->foreignId('role_id')->after('email')->constrained('roles')->onDelete('cascade');
+                $table->unsignedBigInteger('role_id')->nullable()->after('email');
             }
         });
     }
@@ -19,7 +19,6 @@ return new class extends Migration
     {
         Schema::table('users', function (Blueprint $table) {
             if (Schema::hasColumn('users', 'role_id')) {
-                $table->dropForeign(['role_id']);
                 $table->dropColumn('role_id');
             }
         });
