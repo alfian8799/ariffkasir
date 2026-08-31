@@ -56,7 +56,7 @@ export default function CategoryIndex({ categories, filters }: Props) {
             });
         }
     };
-    
+
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -122,11 +122,10 @@ export default function CategoryIndex({ categories, filters }: Props) {
                                             <td className="px-6 py-4">
                                                 <Badge
                                                     variant={category.is_active === 1 || category.is_active === true ? "secondary" : "destructive"}
-                                                    className={`font-medium ${
-                                                        category.is_active === 1 || category.is_active === true
+                                                    className={`font-medium ${category.is_active === 1 || category.is_active === true
                                                             ? 'bg-emerald-100 text-emerald-700 hover:bg-emerald-100'
-                                                            : ''
-                                                    }`}
+                                                            : 'bg-red-100 text-red-700 hover:bg-red-100'
+                                                        }`}
                                                 >
                                                     {category.is_active === 1 || category.is_active === true ? 'Aktif' : 'Tidak Aktif'}
                                                 </Badge>

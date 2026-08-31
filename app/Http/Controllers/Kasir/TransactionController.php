@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
+use App\Models\Category;
 
 class TransactionController extends Controller
 {
@@ -23,14 +24,15 @@ class TransactionController extends Controller
     }
 
     public function create()
-    {
-        $products = Product::with('category')->where('stock', '>', 0)->get();
+{
+    $categories = Category::where('is_active', true)->get();
+    $products = Product::where('is_active', true)->with('category')->get();
 
-        return Inertia::render('Kasir/Transaction/TransactionCreate', [
-            'products' => $products
-        ]);
-    }
-
+    return Inertia::render('Kasir/Transaction/TransactionCreate', [
+        'categories' => $categories,
+        'products' => $products,
+    ]);
+}
     public function store(Request $request)
     {
         $request->validate([

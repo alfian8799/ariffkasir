@@ -3,7 +3,7 @@
 namespace App\Http\Controllers\Kasir;
 
 use App\Http\Controllers\Controller;
-use App\Models\Product; 
+use App\Models\Product;
 use App\Models\Category;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -12,21 +12,19 @@ class ProductController extends Controller
 {
     public function index()
     {
-        $products = Product::with('category')->latest()->get(); 
-        
+        $products = Product::with('category')->latest()->get();
+
         return Inertia::render('Kasir/products/ProductIndex', [
             'products' => $products
         ]);
     }
 
     public function create()
-    {
-        $categories = Category::all();
-
-        return Inertia::render('Kasir/products/ProductCreate', [
-            'categories' => $categories
-        ]);
-    }
+{
+    return Inertia::render('Kasir/products/ProductCreate', [
+        'categories' => Category::active()->get(),
+    ]);
+}
 
     public function store(Request $request)
     {
@@ -39,19 +37,17 @@ class ProductController extends Controller
         ]);
 
         Product::create($request->all());
-        
+
         return redirect()->route('kasir.products.index');
     }
 
-    public function edit(Product $product) 
-    {
-        $categories = Category::all();
-
-        return Inertia::render('Kasir/products/ProductEdit', [
-            'product'    => $product,
-            'categories' => $categories
-        ]);
-    }
+   public function edit(Product $product)
+{
+    return Inertia::render('Kasir/products/ProductEdit', [
+        'product' => $product,
+        'categories' => Category::active()->get(),
+    ]);
+}
 
     public function update(Request $request, Product $product)
     {

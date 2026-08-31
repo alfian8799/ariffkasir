@@ -40,7 +40,7 @@ export default function CategoryEdit({ category }: Props) {
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Edit Kategori" />
-            <div className="flex h-full flex-1 flex-col gap-4 rounded-xl p-4 max-w-2xl mx-auto w-full">
+            <div className="flex h-full flex-col gap-4 rounded-xl p-4 w-full">
                 <div className="flex justify-between items-center">
                     <h1 className="text-xl font-semibold leading-tight text-gray-800">Edit Kategori</h1>
                     <Button variant="outline" asChild>
@@ -83,9 +83,11 @@ export default function CategoryEdit({ category }: Props) {
                                     id="is_active"
                                     checked={data.is_active}
                                     onChange={(e) => setData('is_active', e.target.checked)}
-                                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500"
+                                    className="rounded border-gray-300 text-blue-600 shadow-sm focus:ring-blue-500 w-4 h-4"
                                 />
-                                <Label htmlFor="is_active">Aktif</Label>
+                                <Label htmlFor="is_active" className="font-medium cursor-pointer">
+                                    Aktif
+                                </Label>
                             </div>
                             <div className="flex justify-end gap-2">
                                 <Button type="submit" disabled={processing}>
