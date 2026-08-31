@@ -26,16 +26,16 @@ interface CartItem {
     name: string;
     price: number;
     quantity: number;
-    [key: string]: string | number; 
-    
+    [key: string]: string | number;
+
 }
 
 interface TransactionForm {
     items: CartItem[];
     subtotal: number;
-    discount: string | number; 
+    discount: string | number;
     total: number;
-    paid_amount: string | number; 
+    paid_amount: string | number;
     change_amount: number; // KEMBALI KE change_amount
     payment_method: string;
     notes: string;
@@ -48,9 +48,9 @@ export default function TransactionCreate({ products }: { products: Product[] })
     const { data, setData, post, processing, errors, transform } = useForm<TransactionForm>({
         items: [],
         subtotal: 0,
-        discount: '', 
+        discount: '',
         total: 0,
-        paid_amount: '', 
+        paid_amount: '',
         change_amount: 0,
         payment_method: 'Cash',
         notes: '',
@@ -70,15 +70,26 @@ export default function TransactionCreate({ products }: { products: Product[] })
 
     const addToCart = (product: Product) => {
         const existing = data.items.find((i) => i.product_id === product.id);
-        let updatedItems: CartItem[];
+
         if (existing) {
-            updatedItems = data.items.map((i) =>
+            if (existing.quantity >= product.stock) {
+                alert(`Stok ${product.name} tidak mencukupi! Sisa stok hanya ${product.stock}.`);
+                return;
+            }
+
+            const updatedItems = data.items.map((i) =>
                 i.product_id === product.id ? { ...i, quantity: i.quantity + 1 } : i
             );
+            calculateTotals(updatedItems, Number(data.discount) || 0, Number(data.paid_amount) || 0);
         } else {
-            updatedItems = [...data.items, { product_id: product.id, name: product.name, price: Number(product.price), quantity: 1 }];
+            if (product.stock < 1) {
+                alert(`Stok ${product.name} sedang kosong!`);
+                return;
+            }
+
+            const updatedItems = [...data.items, { product_id: product.id, name: product.name, price: Number(product.price), quantity: 1 }];
+            calculateTotals(updatedItems, Number(data.discount) || 0, Number(data.paid_amount) || 0);
         }
-        calculateTotals(updatedItems, Number(data.discount) || 0, Number(data.paid_amount) || 0);
     };
 
     const updateQuantity = (product_id: number, qty: number) => {
@@ -86,6 +97,14 @@ export default function TransactionCreate({ products }: { products: Product[] })
             removeFromCart(product_id);
             return;
         }
+
+        const originalProduct = products.find(p => p.id === product_id);
+
+        if (originalProduct && qty > originalProduct.stock) {
+            alert(`Maksimal stok ${originalProduct.name} yang bisa ditambahkan adalah ${originalProduct.stock}`);
+            return;
+        }
+
         const updatedItems = data.items.map((i) =>
             i.product_id === product_id ? { ...i, quantity: qty } : i
         );
@@ -111,7 +130,7 @@ export default function TransactionCreate({ products }: { products: Product[] })
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
-        
+
         if (data.items.length === 0) {
             alert('Keranjang masih kosong!');
             return;
@@ -130,6 +149,7 @@ export default function TransactionCreate({ products }: { products: Product[] })
 
         post('/kasir/transactions');
     };
+    
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
@@ -192,16 +212,16 @@ export default function TransactionCreate({ products }: { products: Product[] })
                                 <span>Subtotal</span>
                                 <span>Rp {data.subtotal.toLocaleString('id-ID')}</span>
                             </div>
-                            
+
                             <div className="flex justify-between items-center text-sm">
                                 <span>Diskon (Rp)</span>
                                 <div>
-                                    <Input 
-                                        type="number" 
-                                        className="w-28 h-8 text-right" 
+                                    <Input
+                                        type="number"
+                                        className="w-28 h-8 text-right"
                                         placeholder="0"
-                                        value={data.discount} 
-                                        onChange={(e) => handleDiscountChange(e.target.value)} 
+                                        value={data.discount}
+                                        onChange={(e) => handleDiscountChange(e.target.value)}
                                     />
                                     <InputError message={errors.discount} className="mt-1 text-right" />
                                 </div>
@@ -215,22 +235,22 @@ export default function TransactionCreate({ products }: { products: Product[] })
                             <div className="flex justify-between items-center text-sm">
                                 <span>Uang Bayar (Rp)</span>
                                 <div>
-                                    <Input 
-                                        type="number" 
-                                        className="w-28 h-8 text-right" 
+                                    <Input
+                                        type="number"
+                                        className="w-28 h-8 text-right"
                                         placeholder="0"
-                                        value={data.paid_amount} 
-                                        onChange={(e) => handlePaidChange(e.target.value)} 
+                                        value={data.paid_amount}
+                                        onChange={(e) => handlePaidChange(e.target.value)}
                                     />
                                 </div>
                             </div>
                             <InputError message={errors.paid_amount} className="text-right" />
-                            
+
                             <div className="flex justify-between text-sm text-gray-600">
                                 <span>Kembalian</span>
-                                <span>Rp {data.change_amount.toLocaleString('id-ID')}</span> 
+                                <span>Rp {data.change_amount.toLocaleString('id-ID')}</span>
                             </div>
-                            
+
                             <div>
                                 <label className="text-xs text-gray-500">Metode Pembayaran</label>
                                 <select className="w-full border rounded-md text-sm p-1.5 mt-1" value={data.payment_method} onChange={(e) => setData('payment_method', e.target.value)}>
@@ -240,13 +260,13 @@ export default function TransactionCreate({ products }: { products: Product[] })
                                 </select>
                                 <InputError message={errors.payment_method} className="mt-1" />
                             </div>
-                            
+
                             <div>
                                 <label className="text-xs text-gray-500">Catatan</label>
                                 <Input type="text" placeholder="Opsional" value={data.notes} onChange={(e) => setData('notes', e.target.value)} />
                                 <InputError message={errors.notes} className="mt-1" />
                             </div>
-                            
+
                             <Button type="submit" className="w-full mt-2" disabled={processing || data.items.length === 0}>
                                 Bayar Sekarang
                             </Button>

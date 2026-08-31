@@ -3,6 +3,15 @@ import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
 import { Eye, Trash2 } from 'lucide-react';
+import { useState } from 'react';
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -20,15 +29,28 @@ interface TransactionItemData {
 }
 
 export default function TransactionIndex({ transactions }: { transactions: TransactionItemData[] }) {
+    const [selectedTrx, setSelectedTrx] = useState<TransactionItemData | null>(null);
+    const [isModalOpen, setIsModalOpen] = useState(false);
+
     const getStatusLabel = (status?: string) => {
         if (status === 'completed') return 'Selesai';
         if (status === 'cancelled') return 'Dibatalkan';
         return status || 'Selesai';
     };
 
-    const handleCancel = (id: number) => {
-        if (confirm('Apakah Anda yakin ingin membatalkan transaksi ini?')) {
-            router.delete(`/kasir/transactions/${id}`);
+    const openCancelModal = (trx: TransactionItemData) => {
+        setSelectedTrx(trx);
+        setIsModalOpen(true);
+    };
+
+    const handleConfirmCancel = () => {
+        if (selectedTrx) {
+            router.delete(`/kasir/transactions/${selectedTrx.id}`, {
+                onSuccess: () => {
+                    setIsModalOpen(false);
+                    setSelectedTrx(null);
+                },
+            });
         }
     };
 
@@ -63,7 +85,7 @@ export default function TransactionIndex({ transactions }: { transactions: Trans
                                         <td className="p-3 font-medium text-blue-600">{trx.invoice_number}</td>
                                         <td className="p-3">{trx.user?.name || 'Kasir'}</td>
                                         <td className="p-3">Rp {Number(trx.total).toLocaleString('id-ID')}</td>
-                                        <td className="p-3">{trx.payment_method}</td>
+                                        <td className="p-3 uppercase">{trx.payment_method}</td>
                                         <td className="p-3">
                                             <span className={`px-2 py-1 rounded text-xs font-semibold ${trx.status === 'completed' ? 'text-green-600 bg-green-50' : 'text-red-600 bg-red-50'}`}>
                                                 {getStatusLabel(trx.status)}
@@ -79,7 +101,7 @@ export default function TransactionIndex({ transactions }: { transactions: Trans
                                             </Link>
                                             {trx.status !== 'cancelled' && trx.status !== 'Dibatalkan' && (
                                                 <button
-                                                    onClick={() => handleCancel(trx.id)}
+                                                    onClick={() => openCancelModal(trx)}
                                                     className="inline-flex items-center gap-1 text-red-600 hover:text-red-700 font-medium"
                                                 >
                                                     <Trash2 className="w-4 h-4" /> Batalkan
@@ -97,6 +119,27 @@ export default function TransactionIndex({ transactions }: { transactions: Trans
                     </table>
                 </div>
             </div>
+
+            {/* Modal Konfirmasi Pembatalan Inline */}
+            <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
+                <DialogContent className="sm:max-w-[425px]">
+                    <DialogHeader>
+                        <DialogTitle>Konfirmasi Pembatalan</DialogTitle>
+                        <DialogDescription>
+                            Apakah Anda yakin ingin membatalkan transaksi{' '}
+                            <span className="font-semibold text-gray-800">{selectedTrx?.invoice_number}</span>? Tindakan ini akan mengembalikan stok produk terkait.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter className="gap-2 sm:gap-0 mt-4">
+                        <Button type="button" variant="outline" onClick={() => setIsModalOpen(false)}>
+                            Batal
+                        </Button>
+                        <Button type="button" variant="destructive" onClick={handleConfirmCancel}>
+                            Ya, Batalkan Transaksi
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </AppLayout>
     );
 }

@@ -14,6 +14,7 @@ const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Tambah', href: '/kasir/categories/create' },
 ];
 
+
 export default function CategoryCreate() {
     const { data, setData, post, processing, errors } = useForm({
         name: '',

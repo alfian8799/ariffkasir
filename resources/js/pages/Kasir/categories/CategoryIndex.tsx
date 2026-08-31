@@ -56,6 +56,7 @@ export default function CategoryIndex({ categories, filters }: Props) {
             });
         }
     };
+    
 
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
