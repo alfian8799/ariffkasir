@@ -2,6 +2,7 @@ import AppLayout from '@/layouts/app-layout';
 import { type BreadcrumbItem } from '@/types';
 import { Head, Link, router } from '@inertiajs/react';
 import { Button } from '@/components/ui/button';
+import { Eye, Trash2 } from 'lucide-react';
 
 const breadcrumbs: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -70,9 +71,19 @@ export default function TransactionIndex({ transactions }: { transactions: Trans
                                         </td>
                                         <td className="p-3">{new Date(trx.created_at).toLocaleDateString('id-ID')}</td>
                                         <td className="p-3 text-center space-x-2">
-                                            <Link href={`/kasir/transactions/${trx.id}`} className="text-blue-600 hover:underline">Detail</Link>
-                                            {trx.status !== 'Dibatalkan' && (
-                                                <button onClick={() => handleCancel(trx.id)} className="text-red-600 hover:underline">Batalkan</button>
+                                            <Link
+                                                href={`/kasir/transactions/${trx.id}`}
+                                                className="inline-flex items-center gap-1 text-blue-600 hover:text-blue-700 font-medium"
+                                            >
+                                                <Eye className="w-4 h-4" /> Detail
+                                            </Link>
+                                            {trx.status !== 'cancelled' && trx.status !== 'Dibatalkan' && (
+                                                <button
+                                                    onClick={() => handleCancel(trx.id)}
+                                                    className="inline-flex items-center gap-1 text-red-600 hover:text-red-700 font-medium"
+                                                >
+                                                    <Trash2 className="w-4 h-4" /> Batalkan
+                                                </button>
                                             )}
                                         </td>
                                     </tr>

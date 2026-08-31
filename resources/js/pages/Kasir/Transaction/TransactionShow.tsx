@@ -38,7 +38,7 @@ export default function TransactionShow({ transaction }: { transaction: Transact
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title={`Detail ${transaction.invoice_number}`} />
-            <div className="flex h-full flex-col gap-4 p-6 max-w-2xl mx-auto w-full">
+            <div className="flex h-full flex-col gap-6 p-6 md:p-8 w-full max-w-4xl">
                 <div className="flex justify-between items-center">
                     <h1 className="text-xl font-semibold text-gray-800">Detail Nota: {transaction.invoice_number}</h1>
                     <Button variant="outline" asChild>
